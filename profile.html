@@ -1,0 +1,383 @@
+```html
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mon Profile</title>
+
+</head>
+
+
+<body>
+
+    <h1>Mon Profile</h1>
+
+
+    <!-- PHOTO -->
+
+    <h2>Photo</h2>
+
+    <input
+        type="file"
+        id="photoInput"
+        accept="image/png"
+    >
+
+    <br><br>
+
+    <img
+        id="photoPreview"
+        width="150"
+        height="150"
+        alt="Photo de profil"
+    >
+
+
+    <br><br>
+    <hr>
+    <br>
+
+
+    <!-- NOM -->
+
+    <label for="nom">
+        Nom :
+    </label>
+
+    <input
+        type="text"
+        id="nom"
+        placeholder="Votre nom"
+    >
+
+
+    <br><br>
+
+
+    <!-- PRENOM -->
+
+    <label for="prenom">
+        Prénom :
+    </label>
+
+    <input
+        type="text"
+        id="prenom"
+        placeholder="Votre prénom"
+    >
+
+
+    <br><br>
+
+
+    <!-- CIN -->
+
+    <label for="cin">
+        CIN :
+    </label>
+
+    <input
+        type="text"
+        id="cin"
+        placeholder="Votre CIN"
+    >
+
+
+    <br><br>
+
+
+    <!-- TELEPHONE -->
+
+    <label for="telephone">
+        Téléphone :
+    </label>
+
+    <input
+        type="text"
+        id="telephone"
+        placeholder="Votre numéro"
+    >
+
+
+    <br><br>
+
+
+    <!-- BUTTON -->
+
+    <button onclick="saveProfile()">
+        Enregistrer
+    </button>
+
+
+    <p id="message"></p>
+
+
+    <script>
+
+        // ================================
+        // ID DE L'UTILISATEUR CONNECTÉ
+        // ================================
+
+        const userId = localStorage.getItem("userId");
+
+
+        // ================================
+        // ELEMENTS HTML
+        // ================================
+
+        const photoInput =
+            document.getElementById("photoInput");
+
+        const photoPreview =
+            document.getElementById("photoPreview");
+
+
+        // ================================
+        // VERIFIER SI USER CONNECTÉ
+        // ================================
+
+        if (!userId) {
+
+            alert("Vous devez vous connecter.");
+
+            window.location.href = "login.html";
+
+        }
+
+
+        // ================================
+        // RECUPERER LE PROFILE
+        // ================================
+
+        fetch(`/api/profile/${userId}`)
+
+            .then(response => response.json())
+
+            .then(data => {
+
+                if (data.success) {
+
+                    const user = data.user;
+
+
+                    // Nom
+
+                    document.getElementById("nom").value =
+                        user.nom || "";
+
+
+                    // Prénom
+
+                    document.getElementById("prenom").value =
+                        user.prenom || "";
+
+
+                    // CIN
+
+                    document.getElementById("cin").value =
+                        user.cin || "";
+
+
+                    // Téléphone
+
+                    document.getElementById("telephone").value =
+                        user.telephone || "";
+
+
+                    // Photo
+
+                    if (user.photo) {
+
+                        photoPreview.src = user.photo;
+
+                    }
+
+                }
+
+            })
+
+            .catch(error => {
+
+                console.error(
+                    "Erreur:",
+                    error
+                );
+
+            });
+
+
+        // ================================
+        // PREVIEW DE LA PHOTO
+        // ================================
+
+        photoInput.addEventListener(
+            "change",
+            function () {
+
+                const file =
+                    photoInput.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                // Vérifier PNG
+
+                if (file.type !== "image/png") {
+
+                    alert(
+                        "Veuillez sélectionner une image PNG."
+                    );
+
+                    photoInput.value = "";
+
+                    return;
+                }
+
+
+                // Afficher la photo immédiatement
+
+                photoPreview.src =
+                    URL.createObjectURL(file);
+
+            }
+        );
+
+
+        // ================================
+        // SAUVEGARDER LE PROFILE
+        // ================================
+
+        async function saveProfile() {
+
+            const nom =
+                document.getElementById("nom").value;
+
+            const prenom =
+                document.getElementById("prenom").value;
+
+            const cin =
+                document.getElementById("cin").value;
+
+            const telephone =
+                document.getElementById("telephone").value;
+
+
+            let photo = "";
+
+
+            // ================================
+            // CONVERTIR PNG EN BASE64
+            // ================================
+
+            if (photoInput.files[0]) {
+
+                const file =
+                    photoInput.files[0];
+
+
+                photo =
+                    await convertToBase64(file);
+
+            }
+
+
+            // ================================
+            // ENVOYER AU SERVEUR
+            // ================================
+
+            const response = await fetch(
+                `/api/profile/${userId}`,
+                {
+
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        nom: nom,
+
+                        prenom: prenom,
+
+                        cin: cin,
+
+                        telephone: telephone,
+
+                        photo: photo
+
+                    })
+
+                }
+            );
+
+
+            const data =
+                await response.json();
+
+
+            // ================================
+            // MESSAGE
+            // ================================
+
+            document.getElementById(
+                "message"
+            ).textContent = data.message;
+
+        }
+
+
+        // ================================
+        // FUNCTION BASE64
+        // ================================
+
+        function convertToBase64(file) {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const reader =
+                        new FileReader();
+
+
+                    reader.readAsDataURL(file);
+
+
+                    reader.onload =
+                        () => {
+
+                            resolve(
+                                reader.result
+                            );
+
+                        };
+
+
+                    reader.onerror =
+                        error => {
+
+                            reject(error);
+
+                        };
+
+                }
+            );
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>

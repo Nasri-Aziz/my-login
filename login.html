@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register</title>
+</head>
+
+<body>
+
+    <h1>Login</h1>
+
+    <form id="loginForm">
+
+        <input
+            type="email"
+            id="loginEmail"
+            placeholder="Email"
+            required
+        >
+
+        <br><br>
+
+        <input
+            type="password"
+            id="loginPassword"
+            placeholder="Password"
+            required
+        >
+
+        <br><br>
+
+        <button type="submit">Login</button>
+
+    </form>
+
+    <p id="loginMessage"></p>
+
+
+    <hr>
+
+
+    <h1>Register</h1>
+
+    <form id="registerForm">
+
+        <input
+            type="email"
+            id="registerEmail"
+            placeholder="Email"
+            required
+        >
+
+        <br><br>
+
+        <input
+            type="password"
+            id="registerPassword"
+            placeholder="Password"
+            required
+        >
+
+        <br><br>
+
+        <button type="submit">Register</button>
+
+    </form>
+
+    <p id="registerMessage"></p>
+
+
+    <script>
+
+       // LOGIN
+document.getElementById("loginForm").addEventListener("submit", async function(event) {
+
+event.preventDefault();
+
+const email = document.getElementById("loginEmail").value;
+const password = document.getElementById("loginPassword").value;
+
+const response = await fetch("/api/login", {
+
+    method: "POST",
+
+    headers: {
+        "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+        email: email,
+        password: password
+    })
+
+});
+
+const data = await response.json();
+
+if (data.success) {
+
+    // نحفظ ID متاع user
+    localStorage.setItem("userId", data.userId);
+
+    // نمشيو للـ profile
+    window.location.href = "profile.html";
+
+} else {
+
+    document.getElementById("loginMessage").textContent = data.message;
+
+}
+
+});
+
+
+        // REGISTER
+        document.getElementById("registerForm").addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const email = document.getElementById("registerEmail").value;
+            const password = document.getElementById("registerPassword").value;
+
+            const response = await fetch("/api/register", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+
+            });
+
+            const data = await response.json();
+
+            document.getElementById("registerMessage").textContent = data.message;
+
+        });
+
+    </script>
+
+</body>
+
+</html>
